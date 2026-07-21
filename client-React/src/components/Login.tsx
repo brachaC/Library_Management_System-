@@ -1,72 +1,55 @@
-import { useForm } from "react-hook-form";
-import * as yup from "yup";
-import {  Link, useNavigate } from "react-router-dom";
-import { getUserName } from "../server/users";
-import { useContext } from "react";
-import { UserContext } from "../contexts/userContext";
-import { yupResolver } from "@hookform/resolvers/yup";
-import { Box, Button, Stack, TextField } from "@mui/material";
+import { useForm } from 'react-hook-form';
+import * as yup from 'yup';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { Link, useNavigate } from 'react-router-dom';
+import { useContext, useState } from 'react';
+import { UserContext } from '../contexts/userContext';
+import { getUserByUserName } from '../server/api';
+import { Container, Paper, Typography, TextField, Button, Stack, Alert, Box } from '@mui/material';
+import LoginIcon from '@mui/icons-material/Login';
 
-interface FormValues {
-    userName: string;
-    mail: string;
+interface FormValues { userName: string; password: string; }
 
-}
+const schema = yup.object({ userName: yup.string().required('שדה חובה'), password: yup.string().required('שדה חובה') }).required();
 
-const formLogin = yup.object({
-    userName: yup.string().required(),
-    mail: yup.string().matches(/[A-z]/).required(),
-}).required();
+const Login = () => {
+  const { setUser } = useContext(UserContext);
+  const navigate = useNavigate();
+  const [error, setError] = useState('');
+  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({ resolver: yupResolver(schema) });
 
-const Login: React.FC = () => {
-    const { setUser } = useContext(UserContext)
-    const navigate = useNavigate();
-    const { register, handleSubmit, formState: { errors } } = useForm({
-        resolver: yupResolver(formLogin),
-    });
+  const onSubmit = async (data: FormValues) => {
+    try {
+      const res = await getUserByUserName(data.userName);
+      if (res?.data?.password !== data.password) {
+        setError('סיסמה שגויה');
+        return;
+      }
+      setUser(res.data);
+      navigate('/Home');
+    } catch { setError('המשתמש לא נמצא'); }
+  };
 
-    const onSubmit = async (data: FormValues) => {
-
-        const res = await getUserName(data.userName)
-        setUser(res?.data)
-
-        { res?.data?.userName != data.userName ? alert("the user is not esist") : navigate("/Home") }
-        
-        console.log("the data sended", data)
-    }
-
-
-
-    return (
-     <>
-        <Link to="/SignUp" >  new user </Link>
-
-        <form onSubmit={handleSubmit(onSubmit)}id="formLogin">
-            <label>userName</label>
-            
-
-<Stack gap={5} id="inputLogin">
-
-      <TextField id="outlined-basic" label="userName" variant="outlined" {...register("userName",{required:"enter userName"})}
-         placeholder='userName'/>
-        {errors.userName&&<p >{errors.userName.message}</p>}
-
-      <TextField id="outlined-basic" label="mail" variant="outlined" {...register("mail",{required:"enter password"})}
-         placeholder='mail'/>
-       {errors.mail&&<p >{errors.mail.message}</p>}
-
-      <Button type="submit"
-          
-          variant="contained"     
-        >
-          Login
-      </Button>
-
-      </Stack>
-
+  return (
+    <Container maxWidth="xs" sx={{ py: 8 }}>
+      <Paper sx={{ p: 4 }}>
+        <Typography variant="h5" fontWeight={700} color="primary.main" textAlign="center" mb={3}>התחברות</Typography>
+        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <Stack spacing={3}>
+            <TextField label="שם משתמש" {...register('userName')} error={!!errors.userName} helperText={errors.userName?.message} fullWidth />
+            <TextField label="סיסמה" type="password" {...register('password')} error={!!errors.password} helperText={errors.password?.message} fullWidth />
+            <Button type="submit" variant="contained" size="large" fullWidth startIcon={<LoginIcon />}>התחבר</Button>
+          </Stack>
         </form>
-    </>
-    )
-}
+        <Box textAlign="center" mt={2}>
+          <Typography variant="body2" color="text.secondary">
+            אין לך חשבון? <Link to="/SignUp" style={{ color: '#0d7377', fontWeight: 600 }}>הרשם עכשיו</Link>
+          </Typography>
+        </Box>
+      </Paper>
+    </Container>
+  );
+};
 
-export default Login
+export default Login;

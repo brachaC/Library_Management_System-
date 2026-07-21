@@ -1,35 +1,25 @@
+import { useContext } from 'react';
+import { Box } from '@mui/material';
+import { Outlet, useLocation } from 'react-router-dom';
+import { UserContext } from './contexts/userContext';
+import Header from './components/Header';
+import Footer from './components/Footer';
+import Enter from './components/Enter';
 
-import { useContext } from 'react'
-import './App.css'
-import Header from './components/Header'
-import { Box } from '@mui/material'
-import { UserContext } from './contexts/userContext'
-import { Outlet, useLocation } from 'react-router-dom'
-import Enter from './components/Enter'
+const App = () => {
+  const { user } = useContext(UserContext);
+  const { pathname } = useLocation();
 
-
-const App=()=> {
-const {user}=useContext(UserContext)
-    const {pathname}=useLocation()
   return (
-    
-    <>
-<Box sx={{ 
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: 'background.default' }}>
+      <Header />
+      <Box component="main" sx={{ flex: 1 }}>
+        {!user && pathname === '/' && <Enter />}
+        <Outlet />
+      </Box>
+      <Footer />
+    </Box>
+  );
+};
 
-backgroundColor:"rgb(19, 154, 163)" ,
-backgroundRepeat:'no-repeat',
-backgroundSize:'cover',
-color:"rgb(255, 255, 255)",
-height:"100vh",
-width:"100vw"
-} }> 
-    <h1>WELCOME TO BOUTIQUE LIBRARY</h1>
-     <Header/>
-     <Outlet></Outlet>
-     {!user&&pathname=='/'&&<Enter/>}
-     </Box>
-    </>
-  )
-}
-
-export default App
+export default App;
